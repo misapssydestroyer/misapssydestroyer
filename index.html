@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>CS2 Mini - Browser Edition</title>
+<style>
+    body { margin:0; overflow:hidden; background:#000; font-family:Arial; }
+    canvas { display:block; }
+    #ui {
+        position: absolute; top: 10px; left: 10px; color: white; pointer-events: none;
+        font-size: 18px; text-shadow: 2px 2px 4px black;
+    }
+    #crosshair {
+        position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
+        transform: translate(-50%, -50%); pointer-events: none; color: lime;
+        font-size: 30px; line-height: 20px; text-align: center;
+    }
+    #gameover, #win {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        color: red; font-size: 60px; display: none; text-align: center;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+    <div>Viață: <span id="health">100</span></div>
+    <div>Muniție: <span id="ammo">30</span> / ∞</div>
+    <div>Omoruri: <span id="kills">0</span></div>
+</div>
+<div id="crosshair">+</div>
+
+<div id="gameover">GAME OVER</div>
+<div id="win">VICTORIE!</div>
+
+<script>
+// =============== VARIABILE ===============
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+let player = {
+    x: 400, y: 300, angle: 0, speed: 3, size: 12, health: 100
+};
+
+let bullets = [];
+let enemies = [];
+let particles = [];
+let keys = {};
+let kills = 0;
+
+// Harta simplă (pereți)
+const map = [
+    [1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,0,1,1,0,1],
+    [1,0,1,0,0,0,1,0,0,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,1,0,1],
+    [1,0,0,0,1,1,0,1,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+const tileSize = 80;
+
+// =============== INIȚIALIZARE ===============
+function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Generează inamici
+function spawnEnemy() {
+    enemies.push({
+        x: 700 + Math.random()*300,
+        y: 200 + Math.random()*400,
+        health: 100,
+        size: 14,
+        speed: 1.2
+    });
+}
+
+// =============== INPUT ===============
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+canvas.addEventListener('mousemove', e => {
+    const centerX = W/2;
+    player.angle = Math.atan2(e.clientY - H/2, e.clientX - centerX);
+});
+
+canvas.addEventListener('click', shoot);
+
+// =============== SHOOT ===============
+function shoot() {
+    if (player.health <= 0) return;
+    
+    bullets.push({
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(player.angle) * 18,
+        vy: Math.sin(player.angle) * 18,
+        life: 40
+    });
+
+    // recoil mic
+    player.x -= Math.cos(player.angle) * 4;
+    player.y -= Math.sin(player.angle) * 4;
+}
+
+// =============== LOOP ===============
+function loop() {
+    // Miscare jucator
+    let dx = 0, dy = 0;
+    if (keys['w']) { dx += Math.cos(player.angle); dy += Math.sin(player.angle); }
+    if (keys['s']) { dx -= Math.cos(player.angle); dy -= Math.sin(player.angle); }
+    if (keys['a']) { dx += Math.cos(player.angle - Math.PI/2); dy += Math.sin(player.angle - Math.PI/2); }
+    if (keys['d']) { dx -= Math.cos(player.angle - Math.PI/2); dy -= Math.sin(player.angle - Math.PI/2); }
+
+    if (dx || dy) {
+        const len = Math.sqrt(dx*dx + dy*dy);
+        dx = dx/len * player.speed;
+        dy = dy/len * player.speed;
+        
+        if (!collide(player.x + dx, player.y)) player.x += dx;
+        if (!collide(player.x, player.y + dy)) player.y += dy;
+    }
+
+    // Actualizare gloanțe
+    for (let i = bullets.length-1; i >= 0; i--) {
+        let b = bullets[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        b.life--;
+
+        if (b.life <= 0) {
+            bullets.splice(i,1);
+            continue;
+        }
+
+        // Coliziune cu inamici
+        for (let j = enemies.length-1; j >= 0; j--) {
+            let e = enemies[j];
+            if (Math.hypot(b.x - e.x, b.y - e.y) < e.size + 6) {
+                e.health -= 34;
+                bullets.splice(i,1);
+                createParticles(b.x, b.y, 8, 'orange');
+                
+                if (e.health <= 0) {
+                    enemies.splice(j,1);
+                    kills++;
+                    document.getElementById('kills').textContent = kills;
+                    
+                    if (kills >= 10) document.getElementById('win').style.display = 'block';
+                }
+                break;
+            }
+        }
+    }
+
+    // Actualizare inamici
+    for (let e of enemies) {
+        const dx = player.x - e.x;
+        const dy = player.y - e.y;
+        const dist = Math.hypot(dx, dy);
+        
+        if (dist > 0) {
+            e.x += (dx/dist) * e.speed;
+            e.y += (dy/dist) * e.speed;
+        }
+
+        // Coliziune cu jucător
+        if (dist < player.size + e.size && player.health > 0) {
+            player.health -= 0.5;
+            document.getElementById('health').textContent = Math.max(0, Math.floor(player.health));
+            
+            if (player.health <= 0) {
+                document.getElementById('gameover').style.display = 'block';
+            }
+        }
+    }
+
+    // Spawn inamici
+    if (enemies.length < 6 && Math.random() < 0.02) spawnEnemy();
+
+    draw();
+    requestAnimationFrame(loop);
+}
+
+// =============== COLIZIUNE ===============
+function collide(x, y) {
+    const mapX = Math.floor(x / tileSize);
+    const mapY = Math.floor(y / tileSize);
+    if (mapX < 0 || mapY < 0 || mapY >= map.length || mapX >= map[0].length) return true;
+    return map[mapY][mapX] === 1;
+}
+
+// =============== PARTICULE ===============
+function createParticles(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x, y,
+            vx: Math.random()*8 - 4,
+            vy: Math.random()*8 - 4,
+            life: 25,
+            color
+        });
+    }
+}
+
+// =============== DESENARE ===============
+function draw() {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Podea
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(0, H/2, W, H/2);
+
+    // Pereți simpli (pseudo 3D)
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 4;
+    for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+            if (map[y][x] === 1) {
+                const sx = x * tileSize - player.x + W/2;
+                const sy = y * tileSize - player.y + H/2;
+                ctx.fillStyle = '#555';
+                ctx.fillRect(sx, sy, tileSize, tileSize);
+            }
+        }
+    }
+
+    // Inamici
+    for (let e of enemies) {
+        const sx = e.x - player.x + W/2;
+        const sy = e.y - player.y + H/2;
+        
+        ctx.fillStyle = '#c00';
+        ctx.beginPath();
+        ctx.arc(sx, sy, e.size, 0, Math.PI*2);
+        ctx.fill();
+        
+        // cap
+        ctx.fillStyle = '#f44';
+        ctx.beginPath();
+        ctx.arc(sx, sy-6, 8, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    // Gloanțe
+    ctx.fillStyle = 'yellow';
+    for (let b of bullets) {
+        const sx = b.x - player.x + W/2;
+        const sy = b.y - player.y + H/2;
+        ctx.fillRect(sx-3, sy-3, 6, 6);
+    }
+
+    // Particule
+    for (let i = particles.length-1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+        
+        if (p.life <= 0) {
+            particles.splice(i,1);
+            continue;
+        }
+        
+        ctx.globalAlpha = p.life / 25;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - player.x + W/2, p.y - player.y + H/2, 5, 5);
+    }
+    ctx.globalAlpha = 1;
+
+    // Jucător (doar pentru debug, nu se vede în FPS)
+}
+
+spawnEnemy();
+spawnEnemy();
+spawnEnemy();
+loop();
+</script>
+
+</body>
+</html>
