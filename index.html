@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlcoExpert - Magazin & Ghid de Degustare</title>
+    <style>
+        :root {
+            --primary: #4a154b;
+            --secondary: #e6a15c;
+            --dark: #1a1a1a;
+            --light: #f9f9f9;
+            --success: #2ecc71;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo h1 {
+            color: var(--secondary);
+            font-size: 1.8rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+        }
+
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1200') no-repeat center center/cover;
+            height: 60vh;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 1rem;
+        }
+
+        .hero h2 { font-size: 3rem; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; max-width: 600px; margin-bottom: 2rem; }
+
+        .btn {
+            background-color: var(--secondary);
+            color: var(--dark);
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); }
+
+        .container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 80px;
+        }
+
+        h2.section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            color: var(--primary);
+        }
+
+        h2.section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background-color: var(--secondary);
+            margin: 10px auto 0;
+        }
+
+        /* Grid-uri pentru produse și carduri */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        .card-img {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #e74c3c;
+            color: white;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        /* Secțiunea reguli de consum */
+        .rules-box {
+            background: #fff;
+            padding: 2rem;
+            border-left: 5px solid var(--secondary);
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .rules-box ul {
+            list-style-position: inside;
+            margin-top: 1rem;
+        }
+        .rules-box li {
+            margin-bottom: 0.8rem;
+        }
+
+        /* Consultant Chat Widget */
+        .chat-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-box {
+            height: 300px;
+            padding: 1rem;
+            overflow-y: auto;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .msg {
+            padding: 0.8rem;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .msg.bot { background: white; align-self: flex-start; }
+        .msg.user { background: var(--secondary); align-self: flex-end; }
+        
+        .chat-inputs {
+            display: flex;
+            padding: 1rem;
+            gap: 10px;
+            background: white;
+        }
+        .chat-inputs select, .chat-inputs button {
+            padding: 0.7rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .chat-inputs select { flex: 1; }
+        .chat-inputs button { background: var(--primary); color: white; cursor: pointer; font-weight: bold; }
+
+        footer {
+            background: var(--dark);
+            color: #888;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <h1>AlcoExpert</h1>
+        </div>
+        <nav>
+            <a href="#consultant">Consultant</a>
+            <a href="#calitate">Băuturi Premium</a>
+            <a href="#promotii">Promoții</a>
+            <a href="#ghid">Ghid Smart-Drinking</a>
+            <a href="#remedii">Farmacia de a Doua Zi</a>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <h2>Consumă Inteligent. Alege Calitatea.</h2>
+        <p>Descoperă selecții premium, învață secretele degustării fără efecte neplăcute și găsește soluții rapide pentru diminețile grele.</p>
+        <a href="#consultant" class="btn">Discută cu Consultantul</a>
+    </div>
+
+    <div class="container">
+
+        <!-- CONSULTANT VIRTUAL -->
+        <section id="consultant">
+            <h2 class="section-title">Consultantul Tău Sommelier & Ghid</h2>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <span>🤖 Sommelier Virtual AI</span>
+                </div>
+                <div class="chat-box" id="chatBox">
+                    <div class="msg bot">Salutare! Sunt ghidul tău personal. Spune-mi ce planuri ai pentru diseară sau ce problemă vrei să evităm, iar eu îți recomand soluția ideală.</div>
+                </div>
+                <div class="chat-inputs">
+                    <select id="userChoice">
+                        <option value="petrecere">Am o petrecere lungă, cum beau să nu-mi fie rău?</option>
+                        <option value="calitate_vin">Vreau un vin de calitate superioară, ce aleg?</option>
+                        <option value="calitate_tari">Caut o băutură tare fină (Whiskey/Cognac)</option>
+                        <option value="remediu_rapid">Deja îmi e rău/Mă pregătesc pentru mâine dimineață</option>
+                    </select>
+                    <button onclick="sendMessage()">Întreabă</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- GHID: CUM SA BEI SA NU ITI FIE RAU -->
+        <section id="ghid">
+            <h2 class="section-title">Ghid: Cum să bei inteligent (Fără Mahmureală)</h2>
+            <div class="rules-box">
+                <h3>Regulile de Aur ale unui Consum Responsabil</h3>
+                <p>Mahmureala este cauzată în principal de deshidratare și de toxinele din băuturile slab rafinate. Iată cum te protejezi:</p>
+                <ul>
+                    <li><strong>Regula 1:1 (Apă-Alcool):</strong> La fiecare pahar de alcool consumat, bea obligatoriu un pahar mare de apă plată.</li>
+                    <li><strong>Nu bea niciodată pe stomacul gol:</strong> Mâncărurile bogate în grăsimi sănătoase și carbohidrați încetinesc absorbția alcoolului.</li>
+                    <li><strong>Evită mixurile:</strong> Nu amesteca tipurile de alcool (ex: bere, apoi vin, apoi vodcă). Rămâi pe o singură linie.</li>
+                    <li><strong>Fugi de zahăr:</strong> Cocktailurile dulci și sucurile carbogazoase accelerează absorbția alcoolului și garantează durerea de cap.</li>
+                    <li><strong>Alege culori deschise:</strong> Băuturile clare (Vodcă de calitate, Gin) au mai puțini congeneri (impurități) decât cele închise la culoare (Whiskey ieftin, Rom).</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- PROMOTII -->
+        <section id="promotii">
+            <h2 class="section-title">Promoții Hot de Sezon</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=400');">
+                        <div class="badge">-25%</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Pachet Party "Fără Griji"</h3>
+                        <p>1x Prosecco Premium + 1x Cutie ProHydrate Anti-Mahmureală cadou.</p>
+                        <div class="price">149,00 MDL <span style="font-size: 0.9rem; color: #888; text-decoration: line-through;">199,00 MDL</span></div>
+                        <button class="btn" style="width: 100%;">Adaugă în coș</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1528823872057-9c018a7a7235?q=80&w=400');">
+                        <div class="badge">Top Vânzări</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Set Degustare Vin Purcari</h3>
+                        <p>3 sticle din faimoasa colecție Nocturne (Rară Neagră, Cabernet, Chardonnay).</p>
+                        <div class="price">389,00 MDL</div>
+                        <button class="btn" style="width: 100%;">Adaugă în coș</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRODUSE DE CALITATE -->
+        <section id="calitate">
+            <h2 class="section-title">Selecția de Calitate (Premium)</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: #666;">Băuturile premium trec prin procese multiple de filtrare și distilare, reducând drastic compușii toxici auxiliari.</p>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1569529465841-dfedd875002a?q=80&w=400');"></div>
+                    <div class="card-content">
+                        <h3>Single Malt Scotch Whisky 12YO</h3>
+                        <p>Distilat și maturat exclusiv în butoaie de stejar. Note fine de vanilie și fum discret. Fără coloranți.</p>
+                        <div class="price">850,00 MDL</div>
+                        <button class="btn" style="width: 100%;">Cumpără Premium</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=400');"></div>
+                    <div class="card-content">
+                        <h3>Vin Roșu Sec - Cupaj Rezervă</h3>
+                        <p>Maturat 18 luni în barrique. Certificat DOC, taninuri catifelați, perfect pentru cine sofisticate.</p>
+                        <div class="price">290,00 MDL</div>
+                        <button class="btn" style="width: 100%;">Cumpără Premium</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PASTILE PENTRU A DOUA ZI (REMEDII) -->
+        <section id="remedii">
+            <h2 class="section-title">SOS: Farmacia de a Doua Zi (Anti-Mahmureală)</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400');"></div>
+                    <div class="card-content">
+                        <h3>Hydro-Reset (Plicuri Electroliți)</h3>
+                        <p>Restabilește instant echilibrul de sodiu, potasiu și magneziu pierdut prin deshidratare. Se ia înainte de culcare.</p>
+                        <div class="price">45,00 MDL</div>
+                        <button class="btn" style="width: 100%; background: var(--primary); color: white;">Cumpără Remediu</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1607619056574-7b8d304f3c6f?q=80&w=400');"></div>
+                    <div class="card-content">
+                        <h3>Alco-Tox Clear (Complex de Vitamina B & C)</h3>
+                        <p>Accelerează metabolizarea acetaldehidei în ficat (compusul toxic care dă durerea de cap). Ambalaj cu 10 capsule.</p>
+                        <div class="price">75,00 MDL</div>
+                        <button class="btn" style="width: 100%; background: var(--primary); color: white;">Cumpără Remediu</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 AlcoExpert. Toate drepturile rezervate. Consumul excesiv de alcool dăunează grav sănătății. Comercializarea interzisă persoanelor sub 18 ani.</p>
+    </footer>
+
+    <!-- LOGICA PENTRU CONSULTANTUL INTERACTIV -->
+    <script>
+        function sendMessage() {
+            const select = document.getElementById('userChoice');
+            const chatBox = document.getElementById('chatBox');
+            
+            const selectedText = select.options[select.selectedIndex].text;
+            const selectedValue = select.value;
+
+            // Adăugăm mesajul utilizatorului în chat
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'msg user';
+            userMsgDiv.innerText = selectedText;
+            chatBox.appendChild(userMsgDiv);
+
+            // Generăm răspunsul consultantului în funcție de opțiune
+            setTimeout(() => {
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'msg bot';
+                
+                let raspuns = "";
+                if(selectedValue === 'petrecere') {
+                    raspuns = "💡 Sfat de Aur: Mănâncă ceva consistent (carbohidrați/grăsimi) înainte. În timpul petrecerii, aplică regula '1 la 1': după fiecare pahar de alcool, bea unul de apă. Evită cocktailurile cu zahăr, ele aduc durerea de cap de mâine.";
+                } else if (selectedValue === 'calitate_vin') {
+                    raspuns = "🍷 Recomandare: Mergi pe un vin sec, roșu sau alb, de calitate locală recunoscută (ex. Purcari, Cricova Premium). Vinurile seci au mult mai puțin zahăr rezidual, reducând șansele de mahmureală.";
+                } else if (selectedValue === 'calitate_tari') {
+                    raspuns = "🥃 Recomandare: Alege un Single Malt Scotch sau o Vodcă distilată de 5+ ori. Distilarea multiplă elimină uleiurile de fuzel și impuritățile care atacă ficatul și provoacă stările de vomă.";
+                } else if (selectedValue === 'remediu_rapid') {
+                    raspuns = "💊 Plan de Urgență: Ia o capsulă de Alco-Tox Clear chiar acum și dizolvă un plic de Hydro-Reset într-un pahar mare de apă înainte de culcare. Mâine dimineață te vei trezi cu mintea limpede!";
+                }
+
+                botMsgDiv.innerText = raspuns;
+                chatBox.appendChild(botMsgDiv);
+                
+                // Auto-scroll la ultimul mesaj
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 400);
+        }
+    </script>
+</body>
+</html>
